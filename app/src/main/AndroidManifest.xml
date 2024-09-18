@@ -13,6 +13,21 @@
         android:theme="@style/Theme.LocaleNLP_Mobile_V1"
         tools:targetApi="31">
         <activity
+            android:name=".ActivityOfDataAudio"
+            android:exported="false" />
+        <activity
+            android:name=".ActivityOfDataVedio"
+            android:exported="false" />
+        <activity
+            android:name=".ActivityOfDataImage"
+            android:exported="false" />
+        <activity
+            android:name=".ActivityOfDataText"
+            android:exported="false" />
+        <activity
+            android:name=".DashBoardOfActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
