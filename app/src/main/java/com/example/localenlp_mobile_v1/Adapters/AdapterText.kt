@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.localenlp_mobile_v1.R
 import TextDB
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import com.example.localenlp_mobile_v1.DialogFragment.DialogFragmentForUpdateText
 
@@ -26,7 +27,7 @@ class AdapterText(private val context: Context, private val listOfString: ArrayL
     }
 
     // Called to bind data to the views at a specific position
-    override fun onBindViewHolder(holder: DataViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: DataViewHolder, @SuppressLint("RecyclerView") position: Int) {
         val dataItem = listOfString[position]
         holder.textView.text = dataItem
 
