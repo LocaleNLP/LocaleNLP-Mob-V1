@@ -1,9 +1,14 @@
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.localenlp_mobile_v1.ActivityOfDataAudio
+import com.example.localenlp_mobile_v1.ActivityOfDataImage
+import com.example.localenlp_mobile_v1.ActivityOfDataText
+import com.example.localenlp_mobile_v1.ActivityOfDataVedio
 import com.example.localenlp_mobile_v1.Classes.DataItem
 import com.example.localenlp_mobile_v1.R
 
@@ -24,14 +29,30 @@ class DataAdapter(private val dataList: List<DataItem>) : RecyclerView.Adapter<D
         // Bind the data to the views
         holder.imageView.setImageResource(dataItem.imageResId)
         holder.textView.text = dataItem.text
-    }
+        var titleText:String = dataItem.text
 
-    // Return the total number of items in the dataset
+        holder.itemView.setOnClickListener {
+            if (titleText == "Text"){
+                val intent = Intent(holder.itemView.context, ActivityOfDataText::class.java)
+                holder.itemView.context.startActivity(intent)
+            }
+            if (titleText == "Image"){
+                val intent = Intent(holder.itemView.context, ActivityOfDataImage::class.java)
+                holder.itemView.context.startActivity(intent)
+            }
+            if (titleText == "Vedio"){
+                val intent = Intent(holder.itemView.context, ActivityOfDataVedio::class.java)
+                holder.itemView.context.startActivity(intent)
+            }
+            if (titleText == "Audio"){
+                val intent = Intent(holder.itemView.context, ActivityOfDataAudio::class.java)
+                holder.itemView.context.startActivity(intent)
+            }
+        }
+    }
     override fun getItemCount(): Int {
         return dataList.size
     }
-
-    // ViewHolder class that holds the references to the views in each item layout
     inner class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
         val textView: TextView = itemView.findViewById(R.id.textOfDataType)
