@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.localenlp_mobile_v1.ActivityOfDataAudio
 import com.example.localenlp_mobile_v1.ActivityOfDataImage
 import com.example.localenlp_mobile_v1.ActivityOfDataText
-import com.example.localenlp_mobile_v1.ActivityOfDataVedio
+import com.example.localenlp_mobile_v1.ActivityOfDataVideo
 import com.example.localenlp_mobile_v1.Classes.DataItem
 import com.example.localenlp_mobile_v1.R
 
@@ -41,7 +41,7 @@ class DataAdapter(private val dataList: List<DataItem>) : RecyclerView.Adapter<D
                 holder.itemView.context.startActivity(intent)
             }
             if (titleText == "Vedio"){
-                val intent = Intent(holder.itemView.context, ActivityOfDataVedio::class.java)
+                val intent = Intent(holder.itemView.context, ActivityOfDataVideo::class.java)
                 holder.itemView.context.startActivity(intent)
             }
             if (titleText == "Audio"){

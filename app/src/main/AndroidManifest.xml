@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:allowBackup="true"
@@ -19,7 +21,7 @@
             android:name=".ActivityOfDataAudio"
             android:exported="false" />
         <activity
-            android:name=".ActivityOfDataVedio"
+            android:name=".ActivityOfDataVideo"
             android:exported="false" />
         <activity
             android:name=".ActivityOfDataImage"

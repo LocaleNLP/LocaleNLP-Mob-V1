@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,6 +26,7 @@ class ActivityOfDataImage : AppCompatActivity() {
     lateinit var dbImage: ImageDB
     lateinit var listOfImage: ArrayList<String>
     lateinit var adapter: AdapterOfImage
+    lateinit var back:ImageView
 
     private var imageUri: Uri? = null
 
@@ -39,6 +41,7 @@ class ActivityOfDataImage : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_of_data_image)
 
+        back = findViewById(R.id.imageView2)
         recOfImage = findViewById(R.id.recOfImage)
         addImage = findViewById(R.id.floatingActionButton2)
         takeImage = findViewById(R.id.floatingActionButton3)
@@ -48,6 +51,11 @@ class ActivityOfDataImage : AppCompatActivity() {
         adapter = AdapterOfImage(this, listOfImage)
         recOfImage.adapter = adapter // Set the adapter for RecyclerView
         adapter.notifyDataSetChanged()
+
+        back.setOnClickListener {
+            val intent = Intent(this@ActivityOfDataImage,DashBoardOfActivity::class.java)
+            startActivity(intent)
+        }
 
         addImage.setOnClickListener {
             pickImageGallery()
