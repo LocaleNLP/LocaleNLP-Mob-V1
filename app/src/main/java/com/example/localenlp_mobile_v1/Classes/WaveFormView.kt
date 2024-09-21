@@ -44,6 +44,13 @@ class WaveFormView(context: Context, attrs: AttributeSet) : View(context, attrs)
         invalidate() // Request re-draw after updating spikes
     }
 
+    fun clear():ArrayList<Float>{
+        var amps = amplitudes.clone() as ArrayList<Float>
+        amplitudes.clear()
+        spikes.clear()
+        invalidate()
+        return amps
+    }
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         spikes.forEach {

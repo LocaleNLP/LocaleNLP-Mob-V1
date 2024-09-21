@@ -75,4 +75,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/floatingActionButton6"
         app:srcCompat="@drawable/baseline_close_24" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/floatingActionButton7"
+        app:layout_constraintEnd_toEndOf="@+id/floatingActionButton7"
+        app:layout_constraintStart_toStartOf="@+id/floatingActionButton7"
+        app:layout_constraintTop_toTopOf="@+id/floatingActionButton7"
+        app:srcCompat="@drawable/baseline_done_24" />
 </androidx.constraintlayout.widget.ConstraintLayout>
