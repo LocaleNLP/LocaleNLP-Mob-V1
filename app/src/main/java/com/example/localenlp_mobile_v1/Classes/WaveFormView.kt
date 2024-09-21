@@ -1,46 +1,53 @@
 package com.example.localenlp_mobile_v1.Classes
 
-import android.content.AttributionSource
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
-import java.util.jar.Attributes
 
-class WaveFormView(context:Context,attrs:AttributeSet):View(context, attrs) {
+class WaveFormView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
-    private var paint = Paint()
-    private var amplitudes = ArrayList<Float>()
-    private var spikes = ArrayList<RectF>()
-
-
-    private var raduis = 6f
-    private var w = 9f
-    fun addAmplitude(amp:Float){
-        amplitudes.add(amp)
-
-        var left = 0f
-        var top = 0f
-        var right:Float = left + w
-        var bottom:Float = amp
-
-
-        spikes.add(RectF(left,top,right,bottom))
-
-        invalidate()
-    }
-    init {
-        paint.color = Color.rgb(244,81,30)
+    private val paint = Paint().apply {
+        color = Color.rgb(244, 81, 30)
     }
 
-    override fun draw(canvas: Canvas) {
-        super.draw(canvas)
-        spikes.forEach{
-            canvas?.drawRoundRect(it,raduis,raduis,paint)
+    private val amplitudes = ArrayList<Float>()
+    private val spikes = ArrayList<RectF>()
+
+    private val radius = 6f
+    private val spikeWidth = 9f
+    private val spikeSpacing = 6f
+
+    private val screenWidth: Float = resources.displayMetrics.widthPixels.toFloat()
+    private val screenHeight = 400f
+
+    private val maxSpikes = (screenWidth / (spikeWidth + spikeSpacing)).toInt()
+
+    fun addAmplitude(amp: Float) {
+        val normalizedAmp = Math.min((amp / 7).toInt(), screenHeight.toInt()).toFloat()
+        amplitudes.add(normalizedAmp)
+
+        spikes.clear()
+        val recentAmplitudes = amplitudes.takeLast(maxSpikes)
+        for (i in recentAmplitudes.indices) {
+            val left = screenWidth - i * (spikeWidth + spikeSpacing)
+            val spikeHeight = recentAmplitudes[i]
+            val top = (screenHeight - spikeHeight) / 2 // Center spike vertically
+            val right = left + spikeWidth
+            val bottom = top + spikeHeight
+            spikes.add(RectF(left, top, right, bottom))
+        }
+
+        invalidate() // Request re-draw after updating spikes
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        spikes.forEach {
+            canvas.drawRoundRect(it, radius, radius, paint)
         }
     }
 }
