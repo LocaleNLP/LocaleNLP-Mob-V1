@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ar">العربية</string>
+    <string name="fr">الفرنسية</string>
+    <string name="en">الإنجليزية</string>
+    <string name="st">حفظ الصوت ؟</string>
+    <string name="cn">إلغاء</string>
+    <string name="ok">نعم</string>
+    <string name="tx">نص</string>
+    <string name="im">صورة</string>
+    <string name="vd">فيديو</string>
+    <string name="au">صوتي</string>
+    <string name="list_button">زر القائمة</string>
+    <string name="Recorde_Deleted">تم حذف التسجيل</string>
+    <string name="Recorde_Saved">تم حفظ التسجيل</string>
+</resources>

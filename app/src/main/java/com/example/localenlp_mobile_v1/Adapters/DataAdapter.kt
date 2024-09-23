@@ -29,30 +29,38 @@ class DataAdapter(private val dataList: List<DataItem>) : RecyclerView.Adapter<D
         // Bind the data to the views
         holder.imageView.setImageResource(dataItem.imageResId)
         holder.textView.text = dataItem.text
-        var titleText:String = dataItem.text
+        val titleText = dataItem.text
 
         holder.itemView.setOnClickListener {
-            if (titleText == "Text"){
-                val intent = Intent(holder.itemView.context, ActivityOfDataText::class.java)
-                holder.itemView.context.startActivity(intent)
-            }
-            if (titleText == "Image"){
-                val intent = Intent(holder.itemView.context, ActivityOfDataImage::class.java)
-                holder.itemView.context.startActivity(intent)
-            }
-            if (titleText == "Vedio"){
-                val intent = Intent(holder.itemView.context, ActivityOfDataVideo::class.java)
-                holder.itemView.context.startActivity(intent)
-            }
-            if (titleText == "Audio"){
-                val intent = Intent(holder.itemView.context, ActivityOfDataAudio::class.java)
-                holder.itemView.context.startActivity(intent)
+            // Compare the actual string values, not resource IDs
+            val context = holder.itemView.context
+
+            when (titleText) {
+                context.getString(R.string.tx) -> {
+                    val intent = Intent(context, ActivityOfDataText::class.java)
+                    context.startActivity(intent)
+                }
+                context.getString(R.string.im) -> {
+                    val intent = Intent(context, ActivityOfDataImage::class.java)
+                    context.startActivity(intent)
+                }
+                context.getString(R.string.vd) -> {
+                    val intent = Intent(context, ActivityOfDataVideo::class.java)
+                    context.startActivity(intent)
+                }
+                context.getString(R.string.au) -> {
+                    val intent = Intent(context, ActivityOfDataAudio::class.java)
+                    context.startActivity(intent)
+                }
             }
         }
     }
+
     override fun getItemCount(): Int {
         return dataList.size
     }
+
+    // ViewHolder class that holds references to the views for each item
     inner class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(R.id.imageView)
         val textView: TextView = itemView.findViewById(R.id.textOfDataType)

@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">LocaleNLP_Mobile_V1</string>
+    <string name="ar">Arabic</string>
+    <string name="fr">French</string>
+    <string name="en">English</string>
+    <string name="st">Save Audio ?</string>
+    <string name="cn">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="tx">Text</string>
+    <string name="im">Image</string>
+    <string name="vd">Vedio</string>
+    <string name="au">Audio</string>
+    <string name="list_button">list button</string>
+    <string name="Recorde_Deleted">Recorde Deleted</string>
+    <string name="Recorde_Saved">Recorde Saved</string>
 </resources>

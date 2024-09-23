@@ -1,6 +1,7 @@
 package com.example.localenlp_mobile_v1
 
 import DataAdapter
+import android.annotation.SuppressLint
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -15,6 +16,7 @@ class DashBoardOfActivity : AppCompatActivity() {
     lateinit var recOfDataType: RecyclerView
     lateinit var imageOfLanguages:ImageView
 
+    @SuppressLint("ResourceType")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dash_board_of)
@@ -35,10 +37,10 @@ class DashBoardOfActivity : AppCompatActivity() {
 
         // Sample data for the RecyclerView
         val dataList = listOf(
-            DataItem(R.drawable.text, "Text"),
-            DataItem(R.drawable.insert_picture_icon, "Image"),
-            DataItem(R.drawable.video_camera, "Vedio") ,
-            DataItem(R.drawable.volume, "Audio")
+            DataItem(R.drawable.text, getString(R.string.tx)),
+            DataItem(R.drawable.insert_picture_icon, getString(R.string.im)),
+            DataItem(R.drawable.video_camera, getString(R.string.vd)) ,
+            DataItem(R.drawable.volume, getString(R.string.au))
         )
 
         // Set adapter for RecyclerView

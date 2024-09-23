@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ar">Arabe</string>
+    <string name="fr">Français</string>
+    <string name="en">Anglais</string>
+    <string name="st">Enregistrer l\'audio ?</string>
+    <string name="cn">Annuler</string>
+    <string name="ok">OK</string>
+    <string name="tx">Texte</string>
+    <string name="im">Image</string>
+    <string name="vd">Vidéo</string>
+    <string name="au">Audio</string>
+    <string name="list_button">liste de boutons</string>
+    <string name="Recorde_Deleted">Enregistrement supprimé</string>
+    <string name="Recorde_Saved">Enregistrement enregistré</string>
+
+</resources>
