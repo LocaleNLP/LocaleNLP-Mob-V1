@@ -3,6 +3,7 @@ package com.example.localenlp_mobile_v1
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
@@ -18,13 +19,18 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.example.localenlp_mobile_v1.Classes.AudioClass
 import com.example.localenlp_mobile_v1.Classes.Timer
 import com.example.localenlp_mobile_v1.Classes.WaveFormView
+import com.example.localenlp_mobile_v1.DB.AudioDB
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -57,6 +63,9 @@ class ActivityOfDataAudio : AppCompatActivity(), Timer.OnTimerTickListener {
 
     private lateinit var timer: Timer
 
+    private lateinit var db:AudioDB
+    private var duration = ""
+
     @SuppressLint("ServiceCast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +83,7 @@ class ActivityOfDataAudio : AppCompatActivity(), Timer.OnTimerTickListener {
         bottonSheeat = findViewById(R.id.BottomSheet)
         fileNameInpute = findViewById(R.id.fileNameInpute)
 
+        db = AudioDB(this)
 
         buttonSheetBehavior = BottomSheetBehavior.from(bottonSheeat)
         buttonSheetBehavior.peekHeight = 0
@@ -106,7 +116,7 @@ class ActivityOfDataAudio : AppCompatActivity(), Timer.OnTimerTickListener {
         }
 
         listOfAudios.setOnClickListener {
-            Toast.makeText(this,getString(R.string.list_button),Toast.LENGTH_LONG).show()
+            startActivity(Intent(this@ActivityOfDataAudio,GalleryAudioActivity::class.java))
         }
 
         btnCancel.setOnClickListener {
@@ -136,18 +146,61 @@ class ActivityOfDataAudio : AppCompatActivity(), Timer.OnTimerTickListener {
 
         }
 
+
+
         deletBtn.isClickable = false
 
     }
 
-    private fun save(){
+    private fun save() {
         val newFileName = fileNameInpute.text.toString()
-        if (newFileName != filename){
-            var newfile = File("$dirPath/$newFileName.mp3")
-            File("$dirPath/$filename.mp3").renameTo(newfile)
+
+        // Check if the filename has changed
+        if (newFileName != filename) {
+            val newFile = File("$dirPath/$newFileName.mp3")
+            val oldFile = File("$dirPath/$filename.mp3")
+
+            // Rename the file
+            if (oldFile.exists()) {
+                if (oldFile.renameTo(newFile)) {
+                    filename = newFileName // Update the filename if renaming was successful
+                } else {
+                    // Handle renaming failure
+                    println("Error: Failed to rename the file")
+                    return
+                }
+            }
         }
 
+        // Update the filePath and other attributes
+        val filePath = "$dirPath/$newFileName.mp3"
+        val timestamp = Date().time
+        val ampsPaths = "$dirPath/$newFileName.amplitude" // Change the extension to .amplitude or similar
+
+        try {
+            // Write the amplitude data to the file using ObjectOutputStream
+            val fos = FileOutputStream(ampsPaths)
+            val out = ObjectOutputStream(fos)
+            out.writeObject(amplitude)
+
+            // Properly close the streams
+            out.close()
+            fos.close()
+        } catch (e: Exception) {
+            // Handle any IO exceptions
+            e.printStackTrace()
+        }
+
+        // Create an AudioClass instance
+        val record = AudioClass(newFileName, filePath, timestamp, duration, ampsPaths)
+
+        // Insert the audio record into the database
+        db.addAudioRecord(record)
+
+        // Optionally, show a Toast message confirming that the record was saved
+        Toast.makeText(this, "Audio saved successfully!", Toast.LENGTH_SHORT).show()
     }
+
     private fun dissmis(){
         buttonShetBG.visibility = View.GONE
         hidkeyboard(fileNameInpute)
@@ -257,6 +310,7 @@ class ActivityOfDataAudio : AppCompatActivity(), Timer.OnTimerTickListener {
 
     override fun onTimerTick(duration: String) {
         timerText.text = duration
+        this.duration = duration.dropLast(3)
         waveFormView.addAmplitude(recorder.maxAmplitude.toFloat())
     }
 }

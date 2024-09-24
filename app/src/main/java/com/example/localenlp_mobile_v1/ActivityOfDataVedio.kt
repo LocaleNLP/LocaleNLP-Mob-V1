@@ -13,12 +13,12 @@ import com.example.localenlp_mobile_v1.DB.VideoDB
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class ActivityOfDataVideo : AppCompatActivity() {
-    lateinit var goBack: ImageView
-    lateinit var recOfVideo: RecyclerView
-    lateinit var getVideo: FloatingActionButton
-    lateinit var db: VideoDB
-    lateinit var listOfString: ArrayList<String>
-    lateinit var adapter: AdapterForVideo
+    private lateinit var goBack: ImageView
+    private lateinit var recOfVideo: RecyclerView
+    private lateinit var getVideo: FloatingActionButton
+    private lateinit var db: VideoDB
+    private lateinit var listOfString: ArrayList<String>
+    private lateinit var adapter: AdapterForVideo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,35 +28,52 @@ class ActivityOfDataVideo : AppCompatActivity() {
         recOfVideo = findViewById(R.id.recOfVedio)
         getVideo = findViewById(R.id.floatingActionButton4)
 
+        // Set the appropriate layout manager
         recOfVideo.layoutManager = GridLayoutManager(this, 1)
+
         db = VideoDB(this)
 
         // Initialize and set Adapter
-        listOfString = db.getAllVideo() as ArrayList<String>
-        adapter = AdapterForVideo(this, listOfString)
-        recOfVideo.adapter = adapter
+        updateVideoList()
 
         // Set OnClickListener for selecting video
         getVideo.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "video/*"
             }
-            startActivityForResult(intent, 200)
+            startActivityForResult(intent, REQUEST_CODE)
         }
+
+        // Set OnClickListener for the back button
+        goBack.setOnClickListener {
+            finish() // Close the activity
+        }
+
+        updateVideoList()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == 200 && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             data?.data?.let { uri ->
                 db.addVideo(uri.toString())
                 // Refresh the adapter
-                listOfString = db.getAllVideo() as ArrayList<String>
-                adapter.notifyDataSetChanged()
+                updateVideoList()
             } ?: run {
                 Toast.makeText(this, "There is a problem here", Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private fun updateVideoList() {
+        listOfString = ArrayList(db.getAllVideo()) // Fetch updated list from database
+        adapter = AdapterForVideo(this, listOfString) // Recreate adapter with updated list
+        recOfVideo.adapter = adapter // Set the new adapter
+        //listOfString.clear()
+    }
+
+    companion object {
+        private const val REQUEST_CODE = 200
     }
 }
