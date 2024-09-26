@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.localenlp_mobile_v1.Adapters.AdapterOfImage
 import com.example.localenlp_mobile_v1.DB.ImageDB
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.database.*
 
 class ActivityOfDataImage : AppCompatActivity() {
 
@@ -26,9 +29,10 @@ class ActivityOfDataImage : AppCompatActivity() {
     lateinit var dbImage: ImageDB
     lateinit var listOfImage: ArrayList<String>
     lateinit var adapter: AdapterOfImage
-    lateinit var back:ImageView
+    lateinit var back: ImageView
 
     private var imageUri: Uri? = null
+    private lateinit var firebaseRef: DatabaseReference
 
     companion object {
         const val IMAGE_REQUEST_CODE = 100
@@ -53,7 +57,7 @@ class ActivityOfDataImage : AppCompatActivity() {
         adapter.notifyDataSetChanged()
 
         back.setOnClickListener {
-            val intent = Intent(this@ActivityOfDataImage,DashBoardOfActivity::class.java)
+            val intent = Intent(this@ActivityOfDataImage, DashBoardOfActivity::class.java)
             startActivity(intent)
         }
 
@@ -69,6 +73,54 @@ class ActivityOfDataImage : AppCompatActivity() {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_WRITE_STORAGE_PERMISSION)
             }
         }
+
+        // Initialize Firebase reference
+        firebaseRef = FirebaseDatabase.getInstance().getReference("images")
+
+        // Check internet connection and upload new images if connected
+        if (isInternetAvailable()) {
+            uploadNewImagesToFirebase()
+        } else {
+            Toast.makeText(this, "No internet connection available", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun isInternetAvailable(): Boolean {
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.activeNetwork?.let { connectivityManager.getNetworkCapabilities(it) }
+        return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
+
+    private fun uploadNewImagesToFirebase() {
+        // Retrieve all existing image URIs from Firebase
+        firebaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val existingImages = mutableSetOf<String>()
+                for (imageSnapshot in snapshot.children) {
+                    imageSnapshot.getValue(String::class.java)?.let { existingImages.add(it) }
+                }
+
+                // Upload only new images
+                for (imageUri in listOfImage) {
+                    if (!existingImages.contains(imageUri)) {
+                        val imageId = firebaseRef.push().key // Generate a unique ID for each image
+                        imageId?.let {
+                            firebaseRef.child(it).setValue(imageUri)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this@ActivityOfDataImage, "New image uploaded: $imageUri", Toast.LENGTH_SHORT).show()
+                                }
+                                .addOnFailureListener { exception ->
+                                    Toast.makeText(this@ActivityOfDataImage, "Failed to upload image: ${exception.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@ActivityOfDataImage, "Failed to retrieve images: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun pickImageGallery() {
@@ -94,7 +146,6 @@ class ActivityOfDataImage : AppCompatActivity() {
         if (resultCode == RESULT_OK) {
             when (requestCode) {
                 IMAGE_REQUEST_CODE -> {
-                    // Handle gallery image result
                     data?.data?.let { uri ->
                         (recOfImage.adapter as AdapterOfImage).handleImageResult(requestCode, resultCode, data)
                         dbImage.addImage(uri.toString()) // Save the image URI to the database
@@ -103,9 +154,7 @@ class ActivityOfDataImage : AppCompatActivity() {
                     }
                 }
                 CAMERA_REQUEST_CODE -> {
-                    // Handle camera image result
                     imageUri?.let { uri ->
-                        // Add the camera image URI to the adapter and save it to the database
                         (recOfImage.adapter as AdapterOfImage).handleImageResult(requestCode, resultCode, data)
                         dbImage.addImage(uri.toString()) // Save the image URI to the database
                         listOfImage.add(uri.toString())
@@ -121,19 +170,15 @@ class ActivityOfDataImage : AppCompatActivity() {
         when (requestCode) {
             REQUEST_WRITE_STORAGE_PERMISSION -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission granted, open the camera
                     openCamera()
                 } else {
-                    // Permission denied, show a message to the user
                     Toast.makeText(this, "Camera and storage permissions are required to use these features", Toast.LENGTH_SHORT).show()
                 }
             }
             REQUEST_CAMERA_PERMISSION -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission granted, open the camera
                     openCamera()
                 } else {
-                    // Permission denied, show a message to the user
                     Toast.makeText(this, "Camera permission is required to use the camera", Toast.LENGTH_SHORT).show()
                 }
             }
