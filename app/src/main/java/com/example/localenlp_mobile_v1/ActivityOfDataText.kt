@@ -1,7 +1,10 @@
 package com.example.localenlp_mobile_v1
 
 import TextDB
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageView
@@ -11,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.localenlp_mobile_v1.Adapters.AdapterText
 import com.example.localenlp_mobile_v1.DialogFragment.DialogFragmentForText
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 class ActivityOfDataText : AppCompatActivity() {
     lateinit var back: ImageView
@@ -19,6 +24,7 @@ class ActivityOfDataText : AppCompatActivity() {
     lateinit var listOfText: ArrayList<String>
     lateinit var adapter: AdapterText
     lateinit var recOfText: RecyclerView
+    lateinit var firebaseRef: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,13 +34,14 @@ class ActivityOfDataText : AppCompatActivity() {
         back = findViewById(R.id.back)
         addText = findViewById(R.id.floatingActionButton)
         db = TextDB(this)
+        firebaseRef = FirebaseDatabase.getInstance().getReference("texts")
 
         // Initialize the list of texts from the database
-        listOfText = ArrayList(db.getAllTexts())  // Convert List to ArrayList
+        listOfText = ArrayList(db.getAllTexts())
 
         // Set up RecyclerView with the adapter
         recOfText = findViewById(R.id.recOfText)
-        adapter = AdapterText(this@ActivityOfDataText,listOfText)
+        adapter = AdapterText(this@ActivityOfDataText, listOfText)
         recOfText.layoutManager = LinearLayoutManager(this)
         recOfText.adapter = adapter
 
@@ -56,6 +63,9 @@ class ActivityOfDataText : AppCompatActivity() {
                     listOfText.addAll(db.getAllTexts())
                     // Notify the adapter about the new data
                     adapter.notifyDataSetChanged()
+
+                    // Save the new text to Firebase
+                    saveNewTextToFirebase(text)
                 }
 
                 override fun onCancel() {
@@ -64,5 +74,26 @@ class ActivityOfDataText : AppCompatActivity() {
             })
             dialog.show(supportFragmentManager, "DialogFragmentForText")
         }
+    }
+
+    private fun saveNewTextToFirebase(text: String) {
+        if (isInternetAvailable()) {
+            // Save the new text to Firebase
+            firebaseRef.push().setValue(text).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this, "Data saved to Firebase", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Failed to save data to Firebase", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "No internet connection", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun isInternetAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.activeNetwork?.let { connectivityManager.getNetworkCapabilities(it) }
+        return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
 }
