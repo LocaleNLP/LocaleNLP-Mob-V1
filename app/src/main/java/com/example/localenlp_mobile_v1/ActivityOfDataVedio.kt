@@ -3,6 +3,7 @@ package com.example.localenlp_mobile_v1
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.localenlp_mobile_v1.Adapters.AdapterForVideo
 import com.example.localenlp_mobile_v1.DB.VideoDB
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlin.math.log
 
 class ActivityOfDataVideo : AppCompatActivity() {
     private lateinit var goBack: ImageView
@@ -24,22 +26,25 @@ class ActivityOfDataVideo : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_of_data_vedio)
 
+        // Initialize views
         goBack = findViewById(R.id.goBack)
         recOfVideo = findViewById(R.id.recOfVedio)
         getVideo = findViewById(R.id.floatingActionButton4)
 
-        // Set the appropriate layout manager
+        // Set up RecyclerView
         recOfVideo.layoutManager = GridLayoutManager(this, 1)
 
+        // Initialize database
         db = VideoDB(this)
 
-        // Initialize and set Adapter
+        // Initialize and set adapter
         updateVideoList()
 
         // Set OnClickListener for selecting video
         getVideo.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 type = "video/*"
+                addCategory(Intent.CATEGORY_OPENABLE) // Ensure that only accessible videos are shown
             }
             startActivityForResult(intent, REQUEST_CODE)
         }
@@ -48,8 +53,6 @@ class ActivityOfDataVideo : AppCompatActivity() {
         goBack.setOnClickListener {
             finish() // Close the activity
         }
-
-        updateVideoList()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -57,20 +60,24 @@ class ActivityOfDataVideo : AppCompatActivity() {
 
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             data?.data?.let { uri ->
-                db.addVideo(uri.toString())
-                // Refresh the adapter
-                updateVideoList()
+                if (uri.toString().isNotEmpty()) {
+                    db.addVideo(uri.toString())
+                    // Refresh the adapter
+                    updateVideoList()
+                } else {
+                    Toast.makeText(this, "Selected video URI is empty.", Toast.LENGTH_LONG).show()
+                }
             } ?: run {
-                Toast.makeText(this, "There is a problem here", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Failed to retrieve the selected video.", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun updateVideoList() {
         listOfString = ArrayList(db.getAllVideo()) // Fetch updated list from database
-        adapter = AdapterForVideo(this, listOfString) // Recreate adapter with updated list
+        adapter = AdapterForVideo(this, listOfString) // Create adapter with updated list
         recOfVideo.adapter = adapter // Set the new adapter
-        //listOfString.clear()
+//        Toast.makeText(this@ActivityOfDataVideo,db.getAllVideo()[0].toString(),Toast.LENGTH_LONG).show()
     }
 
     companion object {

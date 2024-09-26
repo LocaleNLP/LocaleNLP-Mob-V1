@@ -3,41 +3,27 @@ package com.example.localenlp_mobile_v1.DB
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class VideoDB(context: Context):
-    SQLiteOpenHelper(context, VideoDB.DATABASE_NAME,null, VideoDB.DATABASE_VERSION) {
+class VideoDB(context: Context) :
+    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(TABLE_CREATE) // Create the table
     }
 
-    // This method is called when the database needs to be upgraded
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Drop the old table if it exists
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_TEXTS")
-        // Create the table again
-        onCreate(db)
-    }
-
-    companion object {
-        // Database name and version
-        private const val DATABASE_NAME = "videoDB.db"
-        private const val DATABASE_VERSION = 1
-
-        // Table name and column name
-        const val TABLE_TEXTS = "video"
-        const val COLUMN_CONTENT = "content"
-
-        // SQL query to create the table
-        private const val TABLE_CREATE = "CREATE TABLE $TABLE_TEXTS (" +
-                "$COLUMN_CONTENT TEXT);"
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_TEXTS") // Drop the old table if it exists
+        onCreate(db) // Create the table again
     }
 
     fun addVideo(content: String) {
         val db = this.writableDatabase
-        val values = ContentValues()
-        values.put(COLUMN_CONTENT, content)
+        val values = ContentValues().apply {
+            put(COLUMN_CONTENT, content)
+        }
         db.insert(TABLE_TEXTS, null, values)
         db.close()
     }
@@ -50,26 +36,45 @@ class VideoDB(context: Context):
 
     fun updateVideo(oldContent: String, newContent: String) {
         val db = this.writableDatabase
-        val values = ContentValues()
-        values.put(COLUMN_CONTENT, newContent)
+        val values = ContentValues().apply {
+            put(COLUMN_CONTENT, newContent)
+        }
         db.update(TABLE_TEXTS, values, "$COLUMN_CONTENT=?", arrayOf(oldContent))
         db.close()
     }
 
-
     @SuppressLint("Range")
     fun getAllVideo(): List<String> {
-        val imageList = ArrayList<String>()
+        val videoList = mutableListOf<String>() // Use mutableListOf for cleaner syntax
         val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_TEXTS", null)
+        var cursor: Cursor? = null // Declare cursor outside the try block
 
-        if (cursor.moveToFirst()) {
-            do {
-                val content = cursor.getString(cursor.getColumnIndex(COLUMN_CONTENT))
-                imageList.add(content)
-            } while (cursor.moveToNext())
+        try {
+            cursor = db.rawQuery("SELECT * FROM $TABLE_TEXTS", null)
+
+            if (cursor.moveToFirst()) {
+                do {
+                    // Get the video content from the cursor
+                    val content = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
+                    videoList.add(content) // Add to the list
+                } while (cursor.moveToNext())
+            }
+        } catch (e: Exception) {
+            // Log or handle the exception as necessary
+            e.printStackTrace()
+        } finally {
+            cursor?.close() // Ensure the cursor is closed in the finally block
         }
-        cursor.close()
-        return imageList
+
+        return videoList // Return the list of videos
+    }
+
+
+    companion object {
+        private const val DATABASE_NAME = "videoDB.db"
+        private const val DATABASE_VERSION = 1
+        const val TABLE_TEXTS = "video"
+        const val COLUMN_CONTENT = "content"
+        private const val TABLE_CREATE = "CREATE TABLE $TABLE_TEXTS ($COLUMN_CONTENT TEXT);"
     }
 }
