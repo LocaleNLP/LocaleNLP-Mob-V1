@@ -1,11 +1,12 @@
 package com.example.localenlp_mobile_v1
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.Settings.Global
-import android.text.Editable
-import android.text.TextWatcher
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,10 +15,10 @@ import com.example.localenlp_mobile_v1.Adapters.AdapterAudio
 import com.example.localenlp_mobile_v1.Classes.AudioClass
 import com.example.localenlp_mobile_v1.DB.AudioDB
 import com.example.localenlp_mobile_v1.Interfaces.OnItemClickListener
-import com.google.android.material.textfield.TextInputEditText
+import com.google.android.gms.tasks.Task
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -26,6 +27,7 @@ class GalleryAudioActivity : AppCompatActivity(), OnItemClickListener {
     private lateinit var mAdapter: AdapterAudio
     private lateinit var db: AudioDB
     private lateinit var recAudio: RecyclerView
+    private val ioScope = CoroutineScope(Dispatchers.IO) // Define CoroutineScope at the class level
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,39 +37,85 @@ class GalleryAudioActivity : AppCompatActivity(), OnItemClickListener {
         // Initialize the database
         db = AudioDB(this)
 
-        // Retrieve all audio records from the database
-        records = ArrayList(db.getAllAudioRecords())
-
-        // Initialize the adapter
-        mAdapter = AdapterAudio(records, this)
+        // Initialize records list
+        records = ArrayList()
 
         // Set up the RecyclerView
+        mAdapter = AdapterAudio(records, this)
         recAudio.apply {
             adapter = mAdapter
             layoutManager = LinearLayoutManager(this@GalleryAudioActivity)
         }
 
+        // Fetch all records
         fetchAll()
-
-
     }
 
     private fun fetchAll() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val queryResult: List<AudioClass> = db.getAllAudioRecords()
-            records.clear()
-            records.addAll(queryResult)
-            launch(Dispatchers.Main) {
-                mAdapter.notifyDataSetChanged() // Notify adapter of data change on main thread
+        if (isInternetAvailable(this)) {
+            // Fetch records from the local database
+            ioScope.launch {
+                try {
+                    val queryResult: List<AudioClass> = db.getAllAudioRecords()
+                    records.clear()
+                    records.addAll(queryResult)
+
+                    // Save the data to Firebase
+                    saveToFirebase(queryResult)
+
+                    withContext(Dispatchers.Main) {
+                        mAdapter.notifyDataSetChanged() // Notify adapter of data change on main thread
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@GalleryAudioActivity, "Error fetching records", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private fun saveToFirebase(records: List<AudioClass>) {
+        val database = FirebaseDatabase.getInstance()
+        val audioRef = database.getReference("audioRecords")
+
+        // Clear the current data in Firebase (if needed)
+        audioRef.removeValue().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                for (record in records) {
+                    // Sanitize the filename to create a valid Firebase path
+                    val sanitizedFilename = record.filename.replace(".", "_")
+
+                    // Use the sanitized filename as the key in Firebase
+                    audioRef.child(sanitizedFilename).setValue(record).addOnCompleteListener { saveTask ->
+                        if (saveTask.isSuccessful) {
+                            Log.d("Firebase", "Record saved: $sanitizedFilename")
+                        } else {
+                            Log.e("Firebase", "Failed to save record: ${saveTask.exception?.message}")
+                        }
+                    }
+                }
+            } else {
+                Log.e("Firebase", "Failed to clear records: ${task.exception?.message}")
             }
         }
     }
 
+
     override fun onItemClickListener(position: Int) {
-        var audioRecord = records[position]
-        val intent = Intent(this,AudioPlayerActivity::class.java)
-        intent.putExtra("filepath",audioRecord.filepath)
-        intent.putExtra("filename",audioRecord.filename)
+        val audioRecord = records[position]
+        val intent = Intent(this, AudioPlayerActivity::class.java).apply {
+            putExtra("filepath", audioRecord.filepath)
+            putExtra("filename", audioRecord.filename)
+        }
         startActivity(intent)
     }
 
@@ -75,29 +123,22 @@ class GalleryAudioActivity : AppCompatActivity(), OnItemClickListener {
         val audioRecord = records[position]
 
         // Show a confirmation dialog
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Delete Audio Record")
-        builder.setMessage("Are you sure you want to delete ${audioRecord.filename}?")
-        builder.setPositiveButton("Yes") { dialog, _ ->
-            // Proceed with deleting the item from the database
-            CoroutineScope(Dispatchers.IO).launch {
-                db.deleteAudioRecord(position) // Assuming deleteAudioRecord is a method in your AudioDB class
-                withContext(Dispatchers.Main) {
-                    // Remove the item from the list and notify the adapter
-                    records.removeAt(position)
-                    mAdapter.notifyItemRemoved(position)
-                    Toast.makeText(this@GalleryAudioActivity, "Audio record deleted", Toast.LENGTH_SHORT).show()
+        AlertDialog.Builder(this)
+            .setTitle("Delete Audio Record")
+            .setMessage("Are you sure you want to delete ${audioRecord.filename}?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                ioScope.launch {
+                    db.deleteAudioRecord(position) // Assuming deleteAudioRecord is a method in your AudioDB class
+                    withContext(Dispatchers.Main) {
+                        records.removeAt(position)
+                        mAdapter.notifyItemRemoved(position)
+                        Toast.makeText(this@GalleryAudioActivity, "Audio record deleted", Toast.LENGTH_SHORT).show()
+                    }
                 }
+                dialog.dismiss()
             }
-            dialog.dismiss()
-        }
-        builder.setNegativeButton("No") { dialog, _ ->
-            dialog.dismiss() // Close the dialog if the user chooses "No"
-        }
-
-        val dialog = builder.create()
-        dialog.show()
+            .setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
+            .create()
+            .show()
     }
-
-
 }
