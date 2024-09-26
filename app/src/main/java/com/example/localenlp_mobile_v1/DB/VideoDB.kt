@@ -34,14 +34,14 @@ class VideoDB(context: Context) :
         db.close()
     }
 
-    fun updateVideo(oldContent: String, newContent: String) {
+    fun updateVideo(oldUri: String, newUri: String) {
         val db = this.writableDatabase
-        val values = ContentValues().apply {
-            put(COLUMN_CONTENT, newContent)
-        }
-        db.update(TABLE_TEXTS, values, "$COLUMN_CONTENT=?", arrayOf(oldContent))
+        val contentValues = ContentValues()
+        contentValues.put("videoUri", newUri)
+        db.update("videos", contentValues, "videoUri=?", arrayOf(oldUri)) // Update the database
         db.close()
     }
+
 
     @SuppressLint("Range")
     fun getAllVideo(): List<String> {

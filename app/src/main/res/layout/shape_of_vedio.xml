@@ -23,13 +23,5 @@
         app:layout_constraintTop_toBottomOf="@+id/videoView"
         app:srcCompat="@drawable/delete" />
 
-    <ImageView
-        android:id="@+id/updateVedio"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintStart_toStartOf="@+id/videoView"
-        app:layout_constraintTop_toBottomOf="@+id/videoView"
-        app:srcCompat="@drawable/update" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
