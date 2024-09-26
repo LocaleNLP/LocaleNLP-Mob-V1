@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "670920153106",
+    "firebase_url": "https://localnlp-default-rtdb.firebaseio.com",
+    "project_id": "localnlp",
+    "storage_bucket": "localnlp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:670920153106:android:650fb8f0b54222f128a0cb",
+        "android_client_info": {
+          "package_name": "com.example.localenlp_mobile_v1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwqxpu_mESA_x3Qz0uarFmjkf-vM1bLDE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
